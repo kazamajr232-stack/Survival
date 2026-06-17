@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SURVIVAL HARI INI - Simulasi Manajemen Waktu</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- AUDIO CONTROLLER -->
+    <div id="audio-controller" style="display:none;">
+        <audio id="sound-krisis" src="assets/sounds/crisis.mp3" loop></audio>
+        <audio id="sound-select" src="assets/sounds/select.mp3"></audio>
+        <audio id="sound-success" src="assets/sounds/success.mp3"></audio>
+        <audio id="sound-bgm" src="assets/sounds/bgm.mp3" loop></audio>
+    </div>
+
+    <!-- START SCREEN -->
+    <div class="start-screen" id="start-screen">
+        <h1>🔥 SURVIVAL HARI INI 🔥</h1>
+        <div class="story-box">
+            <p>Kamu adalah pekerja kantoran yang menghadapi <strong>deadline menumpuk</strong>, 
+            <strong>tekanan bos</strong>, dan <strong>kehidupan pribadi yang berantakan</strong>.</p>
+            <p>Kamu punya <strong>16 jam</strong> untuk menyelesaikan semua tugas tanpa mengalami <strong>BURNOUT</strong>.</p>
+            <p>Setiap pilihan memiliki konsekuensi. Pilih dengan bijak.</p>
+            <p><strong>Apakah kamu bisa bertahan hari ini?</strong></p>
+        </div>
+        <button class="btn start-btn" onclick="startGame()">🎮 MULAI SIMULASI</button>
+    </div>
+
+    <!-- MAIN GAME -->
+    <div id="game-container" style="display:none;">
+        <header class="header">
+            <h1>SURVIVAL HARI INI</h1>
+            <p>Simulasi Manajemen Waktu & Burnout Prevention</p>
+            <div class="tracker">
+                <div class="tracker-item" id="tracker-time">
+                    <h3>⏰ WAKTU</h3>
+                    <div class="value" id="time-display">16:00</div>
+                </div>
+                <div class="tracker-item" id="tracker-energy">
+                    <h3>⚡ ENERGI</h3>
+                    <div class="value" id="energy-display">100</div>
+                </div>
+                <div class="tracker-item" id="tracker-stress">
+                    <h3>😰 STRESS</h3>
+                    <div class="value" id="stress-display">0</div>
+                </div>
+                <div class="tracker-item" id="tracker-productivity">
+                    <h3>📊 PRODUKTIVITAS</h3>
+                    <div class="value" id="productivity-display">0</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <div class="story-intro" id="story-intro">
+                <strong>Peringatan:</strong> Hari ini akan menjadi hari yang sangat melelahkan. 
+                Pilihlah aktivitas dengan bijak untuk menjaga keseimbangan hidupmu.
+            </div>
+
+            <div class="rules-box">
+                <h3>📋 Aturan Bermain</h3>
+                <ul>
+                    <li>Pilih kartu aktivitas untuk mengisi waktumu</li>
+                    <li>Setiap kartu membutuhkan waktu dan energi</li>
+                    <li>Jika energi habis atau stress mencapai 100, kamu BURNOUT</li>
+                    <li>Selesaikan tugas utama untuk meningkatkan produktivitas</li>
+                    <li>Tangani krisis yang muncul dengan cepat!</li>
+                </ul>
+            </div>
+
+            <!-- Crisis Panel -->
+            <div class="crisis-panel" id="crisis-panel">
+                <div class="section-title">🚨 KRISIS MENDADAK!</div>
+                <div class="crisis-story" id="crisis-story"></div>
+                <div class="crisis-options" id="crisis-options"></div>
+            </div>
+
+            <!-- Card Sections -->
+            <div id="card-sections"></div>
+
+            <!-- Summary Panel (FIXED: tidak ketutupan) -->
+            <div class="summary-panel" id="summary-panel">
+                <h3>📋 Ringkasan Pilihan</h3>
+                <div class="selected-cards" id="selected-cards"></div>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <h4>Sisa Waktu</h4>
+                        <div class="big" id="summary-time">16:00</div>
+                    </div>
+                    <div class="summary-item">
+                        <h4>Sisa Energi</h4>
+                        <div class="big" id="summary-energy">100</div>
+                    </div>
+                    <div class="summary-item">
+                        <h4>Stress Level</h4>
+                        <div class="big" id="summary-stress">0</div>
+                    </div>
+                    <div class="summary-item">
+                        <h4>Produktivitas</h4>
+                        <div class="big" id="summary-productivity">0</div>
+                    </div>
+                </div>
+                <div class="status-badge" id="status-badge">STATUS: SIAP BERJUANG</div>
+                <button class="btn" id="finish-btn" onclick="finishGame()" style="margin-top:1rem; width:100%;">✅ SELESAIKAN HARI</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ANIMATION PANEL (Skor Akhir) - FIXED FULL SCREEN OVERLAY -->
+    <div class="anim-panel" id="anim-panel">
+        <div class="anim-content">
+            <div class="anim-emoji" id="anim-emoji">🐱</div>
+            <div class="anim-text" id="anim-text">Sedang menghitung skor...</div>
+            <div class="anim-details" id="anim-details"></div>
+            <button class="anim-btn" id="anim-btn" onclick="closeAnim()">LANJUT</button>
+        </div>
+    </div>
+
+    <!-- FINAL SCORE MODAL (FIXED: Tidak ketutupan header) -->
+    <div class="final-score-modal" id="final-score-modal">
+        <div class="final-score-content">
+            <div class="final-score-header">
+                <h1>🏆 SKOR AKHIR 🏆</h1>
+            </div>
+            <div class="final-score-body">
+                <div class="final-emoji" id="final-emoji">🎉</div>
+                <div class="final-rank" id="final-rank">RANK A</div>
+                <div class="final-score-value" id="final-score-value">850</div>
+                <div class="final-message" id="final-message">Selamat! Kamu berhasil melewati hari ini!</div>
+                
+                <div class="final-stats">
+                    <div class="final-stat">
+                        <span class="final-stat-label">Waktu Tersisa</span>
+                        <span class="final-stat-value" id="final-time">2:00</span>
+                    </div>
+                    <div class="final-stat">
+                        <span class="final-stat-label">Energi Tersisa</span>
+                        <span class="final-stat-value" id="final-energy">45</span>
+                    </div>
+                    <div class="final-stat">
+                        <span class="final-stat-label">Stress Akhir</span>
+                        <span class="final-stat-value" id="final-stress">30</span>
+                    </div>
+                    <div class="final-stat">
+                        <span class="final-stat-label">Produktivitas</span>
+                        <span class="final-stat-value" id="final-productivity">75</span>
+                    </div>
+                </div>
+            </div>
+            <div class="final-score-footer">
+                <button class="btn" onclick="restartGame()">🔄 MAIN LAGI</button>
+                <button class="btn btn-secondary" onclick="shareScore()">📤 BAGIKAN</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION -->
+    <div class="notification" id="notification"></div>
+
+    <script src="js/audio.js"></script>
+    <script src="js/cards.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>in-bottom: 4px;
+    }
+    
+    .crisis-option small {
+      color: #aaa;
+      font-size: 0.8em;
+    }
+    
+    /* Result */
+    .result-emoji { font-size: 4em; text-align: center; margin-bottom: 10px; }
+    .result-status { font-size: 1.8em; text-align: center; margin-bottom: 10px; }
+    .result-score { text-align: center; font-size: 1.3em; color: var(--red); margin-bottom: 16px; }
+    
+    /* Install Prompt */
+    .install-banner {
+      display: none;
+      position: fixed;
+      bottom: 80px;
+      left: 16px;
+      right: 16px;
+      background: var(--blue);
+      padding: 16px;
+      border-radius: 12px;
+      text-align: center;
+      z-index: 99;
+    }
+    
+    .install-banner button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background: #fff;
+      color: var(--blue);
+      font-weight: bold;
+    }
+    
+    /* Animations */
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    
+    .pulse { animation: pulse 2s infinite; }
+    
+    @keyframes slideUp {
+      from { transform: translateY(100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .slide-up { animation: slideUp 0.3s ease; }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <h1>🧠 SURVIVAL HARI INI</h1>
+    <p>Manajemen Waktu Mahasiswa Psikologi</p>
+  </header>
+  
+  <!-- Stats -->
+  <div class="stats-scroll">
+    <div class="stat-pill">
+      <span class="label">Tersedia</span>
+      <span class="value" id="stat-total">16j</span>
+    </div>
+    <div class="stat-pill">
+      <span class="label">Terpakai</span>
+      <span class="value" id="stat-used">0j</span>
+    </div>
+    <div class="stat-pill">
+      <span class="label">Sisa</span>
+      <span class="value" id="stat-remain">16j</span>
+    </div>
+    <div class="stat-pill">
+      <span class="label">Skor</span>
+      <span class="value" id="stat-score">0</span>
+    </div>
+  </div>
+  
+  <!-- Phase -->
+  <div class="phase-bar">
+    <span id="phase-text">🎲 PILIH KARTU</span>
+  </div>
+  
+  <!-- Cards -->
+  <div class="cards-list" id="cards-container"></div>
+  
+  <!-- Timeline -->
+  <div class="timeline-section">
+    <h2>📅 Jadwal</h2>
+    <div id="timeline"></div>
+  </div>
+  
+  <!-- Bottom Bar -->
+  <div class="bottom-bar">
+    <button class="btn btn-secondary" onclick="shuffleCards()">🎲 Acak</button>
+    <button class="btn btn-primary" id="btn-crisis1" onclick="showCrisis(1)" disabled>Krisis 1</button>
+    <button class="btn btn-primary" id="btn-crisis2" onclick="showCrisis(2)" disabled>Krisis 2</button>
+    <button class="btn btn-success" id="btn-result" onclick="showResult()" disabled>Hasil</button>
+  </div>
+  
+  <!-- Install Banner -->
+  <div class="install-banner" id="install-banner">
+    <div>📱 Install aplikasi ini di homescreen?</div>
+    <button onclick="installApp()">Install</button>
+  </div>
+  
+  <!-- Crisis Modal -->
+  <div class="modal" id="modal-crisis">
+    <div class="modal-content slide-up">
+      <h2 id="crisis-title"></h2>
+      <p id="crisis-story"></p>
+      <div id="crisis-options"></div>
+    </div>
+  </div>
+  
+  <!-- Result Modal -->
+  <div class="modal" id="modal-result">
+    <div class="modal-content slide-up">
+      <div class="result-emoji" id="result-emoji"></div>
+      <h2 class="result-status" id="result-status"></h2>
+      <div class="result-score" id="result-score"></div>
+      <p id="result-story"></p>
+      <button class="btn btn-primary" onclick="location.reload()" style="width:100%">🔄 Main Lagi</button>
+    </div>
+  </div>
+
+  <script>
+    // ===== DATA =====
+    const CARDS = [
+      { id:'R1', title:'Laporan di Meja Dosen', cat:'red', time:3, net:16, icon:'📋', story:'Klien Andi menunggu. Dosen supervisor menunggu. Siapa yang tidak menunggu? Kamu.', req:'Wajib H3 setelahnya' },
+      { id:'R2', title:'Shift yang Membayar Kuliah', cat:'red', time:5, net:5, icon:'☕', story:'Bos sudah cari pengganti 3 kali. Skip = dipecat = tidak ada uang semester depan.', req:'Jangan digandeng R4/R5' },
+      { id:'R3', title:'Ujian Penentu Masa Depan', cat:'red', time:2, net:21, icon:'📝', story:'Satu kali kesempatan. Tidak lulus = skripsi mundur 1 tahun.', req:'B2 harus selesai dulu' },
+      { id:'R4', title:'Panggilan Jam 8 Malam', cat:'red', time:2, net:16, icon:'📞', story:'Hotline kampus. Klien pernah self-harm. Risiko etik berat.', req:'Wajib H3 setelahnya' },
+      { id:'R5', title:'Proposal yang Menggantung', cat:'red', time:3, net:12, icon:'📑', story:'Dosen wali chat: "Besok saya baca." Sudah 2 minggu ditunda.', req:'Set timer ketat' },
+      { id:'B1', title:'Rapat Besar MAPSI', cat:'blue', time:2, net:9, icon:'🤝', story:'200 peserta, 10 media partner. Ketua divisi dari luar kota.', req:'Medium priority' },
+      { id:'B2', title:'SPSS: Kunci Skripsi', cat:'blue', time:2, net:21, icon:'💻', story:'Data 150 responden menunggu. Tanpa ini, tidak bisa sidang.', req:'WAJIB - Foundational' },
+      { id:'B3', title:'Kopi dengan Alumni', cat:'blue', time:1, net:9, icon:'☕', story:'Alumni HR di unicorn. 1 jam bisa buka pintu magang 3jt/bulan.', req:'Low priority' },
+      { id:'B4', title:'Anak-anak di Panti', cat:'blue', time:3, net:9, icon:'🧒', story:'Volunteer asesmen anak. Portofolio untuk S2 klinis.', req:'Medium priority' },
+      { id:'B5', title:'Webinar Sertifikasi', cat:'blue', time:2, net:8, icon:'📜', story:'Sertifikat BNSP. Bisa buka praktik online 150rb/jam.', req:'Low priority' },
+      { id:'K1', title:'Teman yang Hancur', cat:'yellow', time:1.5, net:2, icon:'💔', story:'Sari chat: "Aku putus, aku mau mati." Bukan klien, tapi teman dekat.', req:'Tolak jika ada R4' },
+      { id:'K2', title:'Grup WA yang Hidup', cat:'yellow', time:0.5, net:2, icon:'💬', story:'200+ pesan. FOMO. 30 menit jadi 2 jam tanpa sadar.', req:'TOLAK - Distraksi' },
+      { id:'K3', title:'Email yang Menggoda', cat:'yellow', time:1, net:9, icon:'📧', story:'Brand skincare ajak collab. Bayaran 500rb. Followers cuma 200.', req:'Pilih jika butuh uang' },
+      { id:'K4', title:'Telepon dari Ibu', cat:'yellow', time:0.75, net:2, icon:'📱', story:'"Kapan lulus? Temanmu sudah kerja." Hati hancur. Tapi ibu yang bayar UKT.', req:'Pilih jika dukungan finansial krusial' },
+      { id:'H1', title:'Tidur: Hak Dasar', cat:'green', time:6, net:28, icon:'😴', story:'Jam 12 malam. Mata berat. Tidur 6 jam = bangun jam 6. Tidur 3 jam = otak ngaco.', req:'WAJIB - Minimal 4 jam' },
+      { id:'H2', title:'Makan Bukan Grab', cat:'green', time:1, net:13, icon:'🍽️', story:'Nasi padang di warung. 30 menit jalan. Bukan nasi kotak depan laptop.', req:'Recommended' },
+      { id:'H3', title:'Menulis Rasa', cat:'green', time:0.5, net:22, icon:'📓', story:'Jurnal: "Hari ini aku merasa..." Terdengar lebay. Tapi tanpa ini, emosi menumpuk.', req:'WAJIB jika ada R1/R4' },
+      { id:'H4', title:'Drakor Tanpa Rasa Bersalah', cat:'green', time:1.5, net:7, icon:'📺', story:'1.5 jam nonton tanpa multitasking. Pure enjoyment. Tapi di kepala: "Saya seharusnya kerja."', req:'Optional - Mood booster' },
+      { id:'X1', title:'Scroll Malam Buta', cat:'black', time:2, net:-24, icon:'📱', story:'Kasus KDRT viral. 2 jam. Mau berhenti tidak bisa. Tidur jam 3 pagi. Bangun jam 6, hancur.', req:'AUTO BURNOUT' },
+      { id:'X2', title:'Tanya ke Kosong', cat:'black', time:1.5, net:-21, icon:'🤯', story:'"Cocok jadi psikolog?" 1.5 jam overthinking. LinkedIn orang dibandingkan. Tidak ada jawaban.', req:'AUTO BURNOUT' }
+    ];
+
+    const CRISES = [
+      { title:'🚨 KRISIS 1: Pesan di Layar', story:'HP bergetar jam 9 malam.\n\n"Kak, aku ingin mengakhiri hidup. Bisa chat?"\n\nBukan klien resmi. Teman kampus yang pernah curhat sekali. Tapi kata-katanya serius.', options:[ {id:'A',text:'Chat & Bantu Langsung',time:1.5,net:9,desc:'1.5 jam. Tugas terkorbankan. Tapi mungkin nyawa terselamatkan.'},{id:'B',text:'Hubungi Supervisor + Hotline',time:0.33,net:22,desc:'20 menit. Profesional. Redirect ke yang berwenang.'},{id:'C',text:'Abaikan, Fokus Ujian',time:0,net:-15,desc:'0 menit. Tapi guilt trip. Risiko etik. Tidak bisa tidur.'} ] },
+      { title:'🚨 KRISIS 2: Email Jam 10 Malam', story:'Inbox: Dosen wali.\n\n"Besok pagi saya butuh refleksi praktikum tambahan. Wajib. Deadline tidak bisa dinego."\n\nPadahal proposal juga belum. Padahal tidur butuh 6 jam. Padahal jam 10 malam.', options:[ {id:'A',text:'Begadang Kerjakan',time:2,net:-3,desc:'H1 jadi 3 jam. Besok zombie. Tapi tugas selesai.'},{id:'B',text:'Negosiasi Deadline',time:0.33,net:16,desc:'Balas email jujur. 50% diterima, 50% ditolak. Tapi berani.'},{id:'C',text:'Kerjakan Singkat',time:0.5,net:7,desc:'30 menit. Kualitas rendah. Tapi tidak begadang.'} ] }
+    ];
+
+    // ===== STATE =====
+    let selected = [], usedTime = 0, score = 0, crisisSolved = [false,false], currentCards = [];
+
+    // ===== INIT =====
+    function shuffleCards() {
+      currentCards = [...CARDS].sort(()=>Math.random()-0.5);
+      selected = []; usedTime = 0; score = 0; crisisSolved = [false,false];
+      render(); updateStats(); updateButtons();
+    }
+
+    function render() {
+      const container = document.getElementById('cards-container');
+      container.innerHTML = '';
+      currentCards.forEach(card => {
+        const isSel = selected.find(s=>s.id===card.id);
+        const canSel = !isSel && (usedTime + card.time <= 16);
+        const div = document.createElement('div');
+        div.className = `card card-${card.cat}`;
+        div.innerHTML = `
+          <div class="card-top"></div>
+          <div class="card-body">
+            <div class="card-header-row">
+              <span class="card-icon">${card.icon}</span>
+              <span class="card-id">${card.id}</span>
+            </div>
+            <h3 class="card-title">${card.title}</h3>
+            <div class="card-meta-row">
+              <span>⏱️ ${card.time}j</span>
+              <span>⭐ ${card.net>0?'+':''}${card.net}</span>
+            </div>
+            <div class="card-story">"${card.story}"</div>
+            <div class="card-req">📌 ${card.req}</div>
+            <button class="card-action ${isSel?'selected':''}" onclick="toggle('${card.id}')" ${!canSel&&!isSel?'disabled':''}>
+              ${isSel?'✓ TERPILIH':canSel?'PILIH':'WAKTU TIDAK CUKUP'}
+            </button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+      renderTimeline();
+    }
+
+    function toggle(id) {
+      const idx = selected.findIndex(s=>s.id===id);
+      if(idx>-1){ selected.splice(idx,1); }
+      else { const c = currentCards.find(x=>x.id===id); if(usedTime+c.time<=16) selected.push(c); }
+      calc(); render(); updateStats(); updateButtons();
+    }
+
+    function calc() {
+      let base=0, pen=0, bon=0;
+      selected.forEach(c=>base+=c.net);
+      const h1=selected.find(c=>c.id==='H1'), h3=selected.find(c=>c.id==='H3');
+      const r1=selected.find(c=>c.id==='R1'), r4=selected.find(c=>c.id==='R4');
+      const r3=selected.find(c=>c.id==='R3'), b2=selected.find(c=>c.id==='B2');
+      const black=selected.find(c=>c.cat==='black');
+      const greens=selected.filter(c=>c.cat==='green').length;
+      
+      if(!h1) pen+=30; else if(h1.time<4) pen+=25;
+      if((r1||r4)&&!h3) pen+=15;
+      if(r3&&!b2) pen+=5;
+      if(hasConsRed(3)) pen+=10;
+      if(black){ base*=0.5; pen+=20; }
+      if(greens>=2&&!hasConsRed(3)) bon+=15;
+      if(!black) bon+=10;
+      score=Math.round(base+bon-pen);
+    }
+
+    function hasConsRed(n) {
+      let c=0; for(let x of selected){ if(x.cat==='red'){c++;if(c>=n)return true;}else if(x.cat==='green')c=0; }
+      return false;
+    }
+
+    function renderTimeline() {
+      const tl = document.getElementById('timeline');
+      if(!selected.length){ tl.innerHTML='<div class="timeline-slot" style="border-color:#555"><span class="slot-time">06:00-22:00</span><span class="slot-title">Belum ada kartu</span></div>'; return; }
+      let cur=6, html='';
+      selected.forEach(c=>{
+        const s=fmt(cur), e=fmt(cur+c.time);
+        html+=`<div class="timeline-slot" style="border-color:var(--${c.cat==='red'?'red':c.cat==='blue'?'blue':c.cat==='yellow'?'yellow':c.cat==='green'?'green':'black'})"><span class="slot-time">${s}-${e}</span><span class="slot-title">${c.icon} ${c.title}</span></div>`;
+        cur+=c.time;
+      });
+      if(cur<22) html+=`<div class="timeline-slot" style="border-color:#555;opacity:.6"><span class="slot-time">${fmt(cur)}-22:00</span><span class="slot-title">🕐 Sisa waktu</span></div>`;
+      tl.innerHTML=html;
+    }
+
+    function fmt(t){ const h=Math.floor(t), m=Math.round((t%1)*60); return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0'); }
+
+    function updateStats() {
+      usedTime=selected.reduce((s,c)=>s+c.time,0);
+      document.getElementById('stat-used').textContent=usedTime.toFixed(1)+'j';
+      document.getElementById('stat-remain').textContent=(16-usedTime).toFixed(1)+'j';
+      document.getElementById('stat-score').textContent=score;
+    }
+
+    function updateButtons() {
+      document.getElementById('btn-crisis1').disabled=selected.length<3||crisisSolved[0];
+      document.getElementById('btn-crisis2').disabled=!crisisSolved[0]||crisisSolved[1];
+      document.getElementById('btn-result').disabled=!crisisSolved[1];
+      document.getElementById('phase-text').textContent=!crisisSolved[0]?'🎲 PILIH KARTU':!crisisSolved[1]?'🚨 KRISIS BERLANGSUNG':'✅ SIAP LIHAT HASIL';
+    }
+
+    function showCrisis(n) {
+      const c=CRISES[n-1];
+      document.getElementById('crisis-title').textContent=c.title;
+      document.getElementById('crisis-story').textContent=c.story;
+      const opts=document.getElementById('crisis-options');
+      opts.innerHTML='';
+      c.options.forEach(o=>{
+        const b=document.createElement('button');
+        b.className='crisis-option';
+        b.innerHTML=`<strong>${o.id}. ${o.text}</strong><small>⏱️ ${o.time}j | ⭐ ${o.net>0?'+':''}${o.net} | ${o.desc}</small>`;
+        b.onclick=()=>resolveCrisis(n,o);
+        opts.appendChild(b);
+      });
+      document.getElementById('modal-crisis').style.display='block';
+    }
+
+    function resolveCrisis(n,o) {
+      if(o.id==='A'&&n===2){ const h1=selected.find(c=>c.id==='H1'); if(h1) h1.time=Math.max(2,h1.time-3); }
+      selected.push({id:`C${n}`,title:`Krisis ${n}`,cat:'crisis',time:o.time,net:o.net,icon:'🚨'});
+      crisisSolved[n-1]=true;
+      document.getElementById('modal-crisis').style.display='none';
+      calc(); render(); updateStats(); updateButtons();
+    }
+
+    function showResult() {
+      const st=score>=80?{t:'✨ THRIVE',c:'#7ed321',e:'✨',s:'Kamu memilih dengan bijak. Prioritas jelas, batasan dihormati, dan kesehatan terjaga.'}:score>=50?{t:'⚖️ SURVIVE',c:'#4a90d9',e:'⚖️',s:'Kamu bertahan. Ada pengorbanan, tapi kamu masih berdiri.'}:score>=20?{t:'⚠️ AT RISK',c:'#f5a623',e:'⚠️',s:'Warning. Pola ini tidak sustainable. Burnout imminent.'}:{t:'🔥 BURNOUT',c:'#e94560',e:'🔥',s:'Sistem kolaps. Butuh intervensi darurat.'};
+      document.getElementById('result-emoji').textContent=st.e;
+      document.getElementById('result-status').textContent=st.t;
+      document.getElementById('result-status').style.color=st.c;
+      document.getElementById('result-score').textContent=`Skor: ${score}`;
+      document.getElementById('result-story').textContent=st.s;
+      document.getElementById('modal-result').style.display='block';
+    }
+
+    // Install prompt
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('install-banner').style.display = 'block';
+    });
+
+    function installApp() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('User installed the app');
+          }
+          document.getElementById('install-banner').style.display = 'none';
+          deferredPrompt = null;
+        });
+      }
+    }
+
+    // Start
+    shuffleCards();
+  </script>
+</body>
+</html>
